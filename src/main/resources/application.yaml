@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: courses-api
+  datasource:
+    url: jdbc:mysql://localhost:3306/courses-api?createDatabaseIfNotExist=true
+    username: root
+    password: password123
+  jpa:
+    show-sql: true
