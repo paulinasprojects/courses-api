@@ -37,6 +37,12 @@ public class User {
   @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
   private Profile profile;
 
+  @ManyToMany
+  @JoinTable(
+          name = "wishlist",
+          joinColumns = @JoinColumn(name = "user_id"),
+          inverseJoinColumns = @JoinColumn(name = "course_id")
+  )
   private Set<Course> favoriteCourses = new HashSet<>();
 
   @Override
