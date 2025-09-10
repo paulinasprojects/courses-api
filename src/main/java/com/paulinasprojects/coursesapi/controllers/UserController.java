@@ -1,5 +1,6 @@
 package com.paulinasprojects.coursesapi.controllers;
 
+import com.paulinasprojects.coursesapi.dtos.ChangePasswordReq;
 import com.paulinasprojects.coursesapi.dtos.RegisterUserReq;
 import com.paulinasprojects.coursesapi.dtos.UpdateUserReq;
 import com.paulinasprojects.coursesapi.dtos.UserDto;
@@ -8,6 +9,7 @@ import com.paulinasprojects.coursesapi.repositories.UserRepository;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -96,5 +98,25 @@ public class UserController {
       userRepository.delete(user);
       return ResponseEntity.noContent().build();
     }
+  }
+
+  @PostMapping("/{id}/change-password")
+  public ResponseEntity<Void> changePassword(
+          @PathVariable Long id,
+          @RequestBody ChangePasswordReq req
+          ) {
+    var user = userRepository.findById(id).orElse(null);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    if (!user.getPassword().equals(req.getOldPassword())) {
+      return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
+
+    user.setPassword(req.getNewPassword());
+    userRepository.save(user);
+
+    return ResponseEntity.noContent().build();
   }
 }
