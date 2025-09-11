@@ -1,6 +1,7 @@
 package com.paulinasprojects.coursesapi.controllers;
 
 import com.paulinasprojects.coursesapi.dtos.CategoryDto;
+import com.paulinasprojects.coursesapi.dtos.UpdateCategoryReq;
 import com.paulinasprojects.coursesapi.entities.Category;
 import com.paulinasprojects.coursesapi.mappers.CategoryMapper;
 import com.paulinasprojects.coursesapi.repositories.CategoryRepository;
@@ -11,9 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @AllArgsConstructor
 @RestController
@@ -60,5 +59,32 @@ public class CategoryController {
             .toList();
   }
 
+  @PutMapping("/{id}")
+  public ResponseEntity<CategoryDto> updateCategory(
+          @PathVariable(name = "id") Byte id,
+          @RequestBody UpdateCategoryReq req
+          ) {
+    var category = categoryRepository.findById(id).orElse(null);
+    if (category == null) {
+      return ResponseEntity.notFound().build();
+    } else {
+      categoryMapper.updateCategory(req, category);
+      categoryRepository.save(category);
 
+      return ResponseEntity.ok(categoryMapper.toDto(category));
+    }
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteCategory(
+          @PathVariable(name = "id") Byte id
+  ) {
+    var category = categoryRepository.findById(id).orElse(null);
+    if (category == null) {
+      return  ResponseEntity.notFound().build();
+    } else {
+      categoryRepository.delete(category);
+      return ResponseEntity.noContent().build();
+    }
+  }
 }
