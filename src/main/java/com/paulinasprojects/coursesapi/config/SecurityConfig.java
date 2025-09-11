@@ -51,6 +51,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(c -> c
                     .requestMatchers(HttpMethod.POST, "/users").permitAll()
                     .requestMatchers("/categories/**").permitAll()
+                    .requestMatchers("/courses/**").permitAll()
                      .anyRequest().authenticated());
     return http.build();
   }
