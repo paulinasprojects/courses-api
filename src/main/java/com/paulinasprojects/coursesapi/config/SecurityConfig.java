@@ -50,6 +50,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(c -> c
                     .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                    .requestMatchers("/categories/**").permitAll()
                      .anyRequest().authenticated());
     return http.build();
   }
