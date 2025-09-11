@@ -67,4 +67,40 @@ public class CourseController {
             .map(courseMapper::toDto)
             .toList();
   }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<CourseDto> updateCourse(
+          @PathVariable(name = "id") Long id,
+        @RequestBody  CourseDto courseDto
+  ) {
+    var category = categoryRepository.findById(courseDto.getCategoryId()).orElse(null);
+    if (category == null) {
+      return ResponseEntity.badRequest().build();
+    }
+
+    var course = courseRepository.findById(id).orElse(null);
+    if (course == null) {
+      return ResponseEntity.notFound().build();
+    }
+    courseMapper.updateCourse(courseDto, course);
+    course.setCategory(category);
+    courseRepository.save(course);
+    courseDto.setId(course.getId());
+
+    return  ResponseEntity.ok(courseDto);
+  }
+
+  @DeleteMapping("/{id}")
+  public  ResponseEntity<Void> deleteCourse(
+          @PathVariable(name = "id") Long id
+  ) {
+    var course = courseRepository.findById(id).orElse(null);
+    if (course == null) {
+      return ResponseEntity.notFound().build();
+    } else {
+      courseRepository.delete(course);
+
+      return ResponseEntity.noContent().build();
+    }
+  }
 }
