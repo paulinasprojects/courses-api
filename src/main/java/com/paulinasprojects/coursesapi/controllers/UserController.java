@@ -1,9 +1,7 @@
 package com.paulinasprojects.coursesapi.controllers;
 
-import com.paulinasprojects.coursesapi.dtos.ChangePasswordReq;
-import com.paulinasprojects.coursesapi.dtos.RegisterUserReq;
-import com.paulinasprojects.coursesapi.dtos.UpdateUserReq;
-import com.paulinasprojects.coursesapi.dtos.UserDto;
+import com.paulinasprojects.coursesapi.dtos.*;
+import com.paulinasprojects.coursesapi.entities.Role;
 import com.paulinasprojects.coursesapi.mappers.UserMapper;
 import com.paulinasprojects.coursesapi.repositories.UserRepository;
 import jakarta.validation.Valid;
@@ -15,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -33,11 +30,12 @@ public class UserController {
           ) {
     if (userRepository.existsByEmail(req.getEmail())) {
       return ResponseEntity.badRequest().body(
-              Map.of("email", "Email is already registered")
+              new ErrorDto("Email is already registered")
       );
     }
     var user = userMapper.toEntity(req);
     user.setPassword(passwordEncoder.encode(user.getPassword()));
+    user.setRole(Role.USER);
     userRepository.save(user);
     var userDto = userMapper.toDto(user);
     var uri = uriBuilder.path("/users/{id}").buildAndExpand(userDto.getId()).toUri();
