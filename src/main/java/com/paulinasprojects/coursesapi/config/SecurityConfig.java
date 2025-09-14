@@ -58,6 +58,7 @@ public class SecurityConfig {
                     .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                     .requestMatchers("/categories/**").permitAll()
                     .requestMatchers("/courses/**").permitAll()
+                    .requestMatchers("/carts/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/users").permitAll()
                     .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                     .requestMatchers(HttpMethod.POST, "/auth/refresh-token").permitAll()
