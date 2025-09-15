@@ -2,10 +2,13 @@ package com.paulinasprojects.coursesapi.controllers;
 
 import com.paulinasprojects.coursesapi.dtos.*;
 import com.paulinasprojects.coursesapi.entities.Address;
+import com.paulinasprojects.coursesapi.entities.Profile;
 import com.paulinasprojects.coursesapi.entities.Role;
 import com.paulinasprojects.coursesapi.mappers.AddressMapper;
+import com.paulinasprojects.coursesapi.mappers.ProfileMapper;
 import com.paulinasprojects.coursesapi.mappers.UserMapper;
 import com.paulinasprojects.coursesapi.repositories.AddressRepository;
+import com.paulinasprojects.coursesapi.repositories.ProfileRepository;
 import com.paulinasprojects.coursesapi.repositories.UserRepository;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -27,6 +30,8 @@ public class UserController {
   private final AddressMapper addressMapper;
   private final PasswordEncoder passwordEncoder;
   private final AddressRepository addressRepository;
+  private final ProfileRepository profileRepository;
+  private final ProfileMapper profileMapper;
 
   @PostMapping
   public ResponseEntity<?> registerUser(
@@ -154,8 +159,8 @@ public class UserController {
 
   @PutMapping("/{id}/address/{addressId}")
   public ResponseEntity<AddressDto> updateAddress(
-          @PathVariable Long id,
-          @PathVariable Long addressId,
+          @PathVariable(name = "id") Long id,
+          @PathVariable(name = "addressId") Long addressId,
          @Valid @RequestBody UpdateAddressReq req
   ) {
     var user = userRepository.findById(id).orElse(null);
@@ -175,10 +180,10 @@ public class UserController {
     return ResponseEntity.ok(addressMapper.toAddressDto(address));
   }
 
-  @DeleteMapping(("/{id}/address/{addressId}"))
+  @DeleteMapping("/{id}/address/{addressId}")
   public ResponseEntity<Void> deleteAddress(
-          @PathVariable Long id,
-          @PathVariable Long addressId
+          @PathVariable(name = "id") Long id,
+          @PathVariable(name = "addressId") Long addressId
   ) {
     var user = userRepository.findById(id).orElse(null);
     if (user == null) {
@@ -191,5 +196,73 @@ public class UserController {
       addressRepository.delete(address);
       return ResponseEntity.noContent().build();
     }
+  }
+
+  @PostMapping("/{id}/profile")
+  public ResponseEntity<ProfileDto> addProfile(
+          @PathVariable(name = "id") Long id,
+          @RequestBody ProfileDto profileDto,
+          UriComponentsBuilder uriBuilder
+  ) {
+    var user = userRepository.findById(id).orElse(null);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+   var profile = profileMapper.toEntity(profileDto);
+    profile.setUser(user);
+    profileRepository.save(profile);
+    profileDto.setId(profile.getId());
+
+    var uri = uriBuilder.path("/users/{id}/profile").buildAndExpand(profileDto.getId()).toUri();
+    return ResponseEntity.created(uri).body(profileDto);
+  }
+
+  @PutMapping("/{id}/profile")
+  public ResponseEntity<ProfileDto> updateProfile (
+          @PathVariable(name = "id") Long id,
+          @RequestBody UpdateProfileReq req
+  ) {
+    var user = userRepository.findById(id).orElse(null);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+     var profile = user.getProfile();
+      if (profile == null) {
+        profile = Profile.builder()
+                .user(user)
+                .bio(req.getBio())
+                .phoneNumber(req.getPhoneNumber())
+                .dateOfBirth(req.getDateOfBirth())
+                .loyaltyPoints(req.getLoyaltyPoints())
+                .build();
+        profileRepository.save(profile);
+        user.setProfile(profile);
+        userRepository.save(user);
+      } else {
+        profileMapper.updateProfile(req, profile);
+        profileRepository.save(profile);
+      }
+    return ResponseEntity.ok(profileMapper.toProfileDto(profile));
+  }
+
+  @DeleteMapping("/{id}/profile")
+  public ResponseEntity<Void> deleteProfile(
+          @PathVariable(name = "id") Long id
+  ) {
+    var user = userRepository.findById(id).orElse(null);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    var profile = user.getProfile();
+    if (profile == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    user.setProfile(null);
+    userRepository.save(user);
+    profileRepository.delete(profile);
+
+    return ResponseEntity.noContent().build();
   }
 }

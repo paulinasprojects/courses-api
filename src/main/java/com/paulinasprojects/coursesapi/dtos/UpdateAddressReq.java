@@ -10,8 +10,10 @@ public class UpdateAddressReq {
 
   @NotBlank(message = "City is required")
   private String city;
+
   @NotBlank(message = "State is required")
   private String state;
+
   @NotBlank(message = "Zip is required")
   private String zip;
 }
