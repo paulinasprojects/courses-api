@@ -1,8 +1,11 @@
 package com.paulinasprojects.coursesapi.controllers;
 
 import com.paulinasprojects.coursesapi.dtos.*;
+import com.paulinasprojects.coursesapi.entities.Address;
 import com.paulinasprojects.coursesapi.entities.Role;
+import com.paulinasprojects.coursesapi.mappers.AddressMapper;
 import com.paulinasprojects.coursesapi.mappers.UserMapper;
+import com.paulinasprojects.coursesapi.repositories.AddressRepository;
 import com.paulinasprojects.coursesapi.repositories.UserRepository;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -21,7 +24,9 @@ import java.util.Set;
 public class UserController {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
+  private final AddressMapper addressMapper;
   private final PasswordEncoder passwordEncoder;
+  private final AddressRepository addressRepository;
 
   @PostMapping
   public ResponseEntity<?> registerUser(
@@ -116,5 +121,75 @@ public class UserController {
     userRepository.save(user);
 
     return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/{id}/address")
+  public ResponseEntity<AddressDto> addAddress(
+          @PathVariable(name = "id") Long id,
+          @RequestBody AddressDto addressDto
+  ) {
+    var user = userRepository.findById(id).orElse(null);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+    Address address;
+     if (addressDto.getId() != null) {
+      address = user.getAddresses().stream().filter(a -> a.getId().equals(addressDto.getId()))
+              .findFirst()
+              .orElse(null);
+
+      if (address == null) {
+        return ResponseEntity.notFound().build();
+      }
+       addressMapper.updateAddress(addressDto, address);
+     } else {
+       address = new Address();
+       addressMapper.updateAddress(addressDto, address);
+       address.setUser(user);
+       user.getAddresses().add(address);
+     }
+     addressRepository.save(address);
+     return ResponseEntity.ok(addressMapper.toAddressDto(address));
+  }
+
+  @PutMapping("/{id}/address/{addressId}")
+  public ResponseEntity<AddressDto> updateAddress(
+          @PathVariable Long id,
+          @PathVariable Long addressId,
+         @Valid @RequestBody UpdateAddressReq req
+  ) {
+    var user = userRepository.findById(id).orElse(null);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    var address = user.getAddresses().stream().filter(a -> a.getId().equals(addressId))
+            .findFirst()
+            .orElse(null);
+    if (address == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    addressMapper.updateSingleAddress(req, address);
+    addressRepository.save(address);
+    return ResponseEntity.ok(addressMapper.toAddressDto(address));
+  }
+
+  @DeleteMapping(("/{id}/address/{addressId}"))
+  public ResponseEntity<Void> deleteAddress(
+          @PathVariable Long id,
+          @PathVariable Long addressId
+  ) {
+    var user = userRepository.findById(id).orElse(null);
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+    var address = addressRepository.findById(addressId).orElse(null);
+    if (address == null) {
+      return ResponseEntity.notFound().build();
+    } else {
+      addressRepository.delete(address);
+      return ResponseEntity.noContent().build();
+    }
   }
 }
