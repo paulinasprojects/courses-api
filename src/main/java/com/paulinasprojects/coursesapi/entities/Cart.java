@@ -65,4 +65,8 @@ public class Cart {
             .map(CartItem::getTotalPrice)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
+
+  public boolean isEmpty() {
+    return items.isEmpty();
+  }
 }

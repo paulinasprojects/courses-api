@@ -3,6 +3,7 @@ package com.paulinasprojects.coursesapi.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
 @Table(name = "order_items")
 public class OrderItem {
   @Id
@@ -33,4 +35,12 @@ public class OrderItem {
 
   @Column(name = "total_price")
   private BigDecimal totalPrice;
+
+  public OrderItem(Order order, Course course, Integer quantity) {
+    this.order = order;
+    this.course = course;
+    this.quantity = quantity;
+    this.unitPrice = course.getPrice();
+    this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
+  }
 }

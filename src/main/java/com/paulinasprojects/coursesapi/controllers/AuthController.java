@@ -69,6 +69,7 @@ public class AuthController {
     return ResponseEntity.ok(new JwtResponse(accessToken.toString()));
   }
 
+  @GetMapping("/me")
   public ResponseEntity<UserDto> me() {
     var authentication = SecurityContextHolder.getContext().getAuthentication();
     var userId = (Long) authentication.getPrincipal();
