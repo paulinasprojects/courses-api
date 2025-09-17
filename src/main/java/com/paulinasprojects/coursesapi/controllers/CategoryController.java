@@ -2,89 +2,60 @@ package com.paulinasprojects.coursesapi.controllers;
 
 import com.paulinasprojects.coursesapi.dtos.CategoryDto;
 import com.paulinasprojects.coursesapi.dtos.UpdateCategoryReq;
-import com.paulinasprojects.coursesapi.entities.Category;
-import com.paulinasprojects.coursesapi.mappers.CategoryMapper;
-import com.paulinasprojects.coursesapi.repositories.CategoryRepository;
+import com.paulinasprojects.coursesapi.exceptions.CategoryNotFoundException;
+import com.paulinasprojects.coursesapi.services.CategoryService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.util.Objects;
 
 @AllArgsConstructor
 @RestController
 @RequestMapping("/categories")
 public class CategoryController {
-  private final CategoryRepository categoryRepository;
-  private final CategoryMapper categoryMapper;
+  private final CategoryService categoryService;
 
   @PostMapping
   public ResponseEntity<CategoryDto> createCategory(
         @Valid @RequestBody CategoryDto categoryDto,
           UriComponentsBuilder uriBuilder
   ) {
-    Category category = categoryMapper.toEntity(categoryDto);
-   Category saved =  categoryRepository.save(category);
+   var saved = categoryService.createCategory(categoryDto);
 
     var uri = uriBuilder.path("/categories/{id}").buildAndExpand(saved.getId()).toUri();
-    return ResponseEntity.created(uri).body(categoryMapper.toDto(saved));
+    return ResponseEntity.created(uri).body(saved);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<CategoryDto> getCategory(
-    @PathVariable Byte id
+  public CategoryDto getCategory(@PathVariable Byte id
   ) {
-    var category = categoryRepository.findById(id).orElse(null);
-    if (category == null) {
-      return ResponseEntity.notFound().build();
-    }
-
-    return ResponseEntity.ok(categoryMapper.toDto(category));
+   return categoryService.getCategory(id);
   }
 
   @GetMapping
   public Iterable<CategoryDto> getAllCategories(
-          @RequestParam(required = false, defaultValue = "", name = "sort") String sort
+     @RequestParam(required = false, defaultValue = "", name = "sort") String sortBy
   ) {
-    if (!Objects.equals("name", sort)) {
-      sort= "name";
-    }
-
-    return  categoryRepository.findAll(Sort.by(sort))
-            .stream()
-            .map(categoryMapper::toDto)
-            .toList();
+   return categoryService.getAllCategories(sortBy);
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<CategoryDto> updateCategory(
+  public CategoryDto updateCategory(
           @PathVariable(name = "id") Byte id,
           @RequestBody UpdateCategoryReq req
-          ) {
-    var category = categoryRepository.findById(id).orElse(null);
-    if (category == null) {
-      return ResponseEntity.notFound().build();
-    } else {
-      categoryMapper.updateCategory(req, category);
-      categoryRepository.save(category);
-
-      return ResponseEntity.ok(categoryMapper.toDto(category));
-    }
+  ) {
+   return categoryService.updateCategory(id, req);
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteCategory(
-          @PathVariable(name = "id") Byte id
+  public void deleteCategory(@PathVariable(name = "id") Byte id
   ) {
-    var category = categoryRepository.findById(id).orElse(null);
-    if (category == null) {
-      return  ResponseEntity.notFound().build();
-    } else {
-      categoryRepository.delete(category);
-      return ResponseEntity.noContent().build();
-    }
+    categoryService.deleteCategory(id);
+  }
+
+  @ExceptionHandler(CategoryNotFoundException.class)
+  public ResponseEntity<Void> handleCategoryNotFound() {
+    return ResponseEntity.notFound().build();
   }
 }
