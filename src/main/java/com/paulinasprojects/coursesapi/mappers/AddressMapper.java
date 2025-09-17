@@ -10,8 +10,13 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface AddressMapper {
   @Mapping(target = "id", ignore = true)
-  void updateAddress(AddressDto addressDto, @MappingTarget Address address);
-  void updateSingleAddress(UpdateAddressReq request, @MappingTarget Address address);
+  @Mapping(target = "user", ignore = true)
+   Address toEntity(AddressDto addressDto);
 
   AddressDto toAddressDto(Address address);
+
+  @Mapping(target = "id", ignore = true)
+  void updateAddress(AddressDto addressDto, @MappingTarget Address address);
+
+  void updateSingleAddress(UpdateAddressReq request, @MappingTarget Address address);
 }
