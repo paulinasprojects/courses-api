@@ -12,7 +12,6 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,7 +31,7 @@ public class StripePaymentGateway implements  PaymentGateway{
               .setMode(SessionCreateParams.Mode.PAYMENT)
               .setSuccessUrl(websiteUrl + "/checkout-success?orderId=" + order.getId())
               .setCancelUrl(websiteUrl + "/checkout-cancel")
-              .putMetadata("order_id", order.getId().toString());
+              .setPaymentIntentData(createPaymentIntentData(order));
 
       order.getItems().forEach(item -> {
         var lineItem = createLineItem(item);
@@ -46,6 +45,12 @@ public class StripePaymentGateway implements  PaymentGateway{
       System.out.println(ex.getMessage());
       throw  new PaymentException();
     }
+  }
+
+  private static SessionCreateParams.PaymentIntentData createPaymentIntentData(Order order) {
+    return SessionCreateParams.PaymentIntentData.builder()
+            .putMetadata("order_id", order.getId().toString())
+            .build();
   }
 
   @Override

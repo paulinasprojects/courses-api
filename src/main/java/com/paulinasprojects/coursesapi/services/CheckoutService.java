@@ -3,21 +3,14 @@ package com.paulinasprojects.coursesapi.services;
 import com.paulinasprojects.coursesapi.dtos.CheckoutReq;
 import com.paulinasprojects.coursesapi.dtos.CheckoutResponse;
 import com.paulinasprojects.coursesapi.entities.Order;
-import com.paulinasprojects.coursesapi.entities.OrderStatus;
 import com.paulinasprojects.coursesapi.exceptions.CartEmptyException;
 import com.paulinasprojects.coursesapi.exceptions.CartNotFoundException;
 import com.paulinasprojects.coursesapi.exceptions.PaymentException;
 import com.paulinasprojects.coursesapi.repositories.CartRepository;
 import com.paulinasprojects.coursesapi.repositories.OrderRepository;
-import com.stripe.exception.SignatureVerificationException;
-import com.stripe.model.PaymentIntent;
-import com.stripe.net.Webhook;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
