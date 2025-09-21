@@ -118,9 +118,9 @@ public class UserController {
   }
 
   @ExceptionHandler(DuplicateUserException.class)
-  public ResponseEntity<Map<String, String>> handleDuplicateUser() {
+  public ResponseEntity<ErrorDto> handleDuplicateUser() {
     return ResponseEntity.badRequest().body(
-            Map.of("email", "Email is already registered")
+            new ErrorDto("Email is already registered")
     );
   }
 
@@ -145,9 +145,9 @@ public class UserController {
   }
 
   @ExceptionHandler(AddressNotForThisUser.class)
-  public ResponseEntity<Map<String, String>> handleAddressNotForUser() {
+  public ResponseEntity<ErrorDto> handleAddressNotForUser() {
     return ResponseEntity.badRequest().body(
-            Map.of("address", "This address does not belong to you")
+            new ErrorDto("This address belongs to someone else")
     );
   }
 }

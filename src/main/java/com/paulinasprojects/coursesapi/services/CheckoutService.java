@@ -3,14 +3,21 @@ package com.paulinasprojects.coursesapi.services;
 import com.paulinasprojects.coursesapi.dtos.CheckoutReq;
 import com.paulinasprojects.coursesapi.dtos.CheckoutResponse;
 import com.paulinasprojects.coursesapi.entities.Order;
+import com.paulinasprojects.coursesapi.entities.OrderStatus;
 import com.paulinasprojects.coursesapi.exceptions.CartEmptyException;
 import com.paulinasprojects.coursesapi.exceptions.CartNotFoundException;
 import com.paulinasprojects.coursesapi.exceptions.PaymentException;
 import com.paulinasprojects.coursesapi.repositories.CartRepository;
 import com.paulinasprojects.coursesapi.repositories.OrderRepository;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.PaymentIntent;
+import com.stripe.net.Webhook;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
@@ -34,7 +41,7 @@ public class CheckoutService {
     orderRepository.save(order);
 
    try {
-  var session =  paymentGateway.createCheckoutSession(order);
+      var session =  paymentGateway.createCheckoutSession(order);
 
      cartService.clearCart(cart.getId());
 
@@ -44,5 +51,13 @@ public class CheckoutService {
      orderRepository.delete(order);
      throw  ex;
    }
+  }
+
+  public void handleWebhookEvent(WebhookReq req) {
+    paymentGateway.parseWebhookRequest(req).ifPresent(paymentResult -> {
+      var order = orderRepository.findById(paymentResult.getOrderId()).orElseThrow();
+      order.setStatus(paymentResult.getOrderStatus());
+      orderRepository.save(order);
+    });
   }
 }

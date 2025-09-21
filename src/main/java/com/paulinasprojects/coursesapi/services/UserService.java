@@ -4,6 +4,7 @@ package com.paulinasprojects.coursesapi.services;
 import com.paulinasprojects.coursesapi.dtos.*;
 import com.paulinasprojects.coursesapi.entities.Profile;
 import com.paulinasprojects.coursesapi.entities.Role;
+import com.paulinasprojects.coursesapi.entities.User;
 import com.paulinasprojects.coursesapi.exceptions.*;
 import com.paulinasprojects.coursesapi.mappers.AddressMapper;
 import com.paulinasprojects.coursesapi.mappers.ProfileMapper;
@@ -42,9 +43,10 @@ public class UserService {
   }
 
   public UserDto getUser(Long userId) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     return userMapper.toDto(user);
   }
+
 
   public UserDto registerUser(RegisterUserReq req) {
     if (userRepository.existsByEmail(req.getEmail())) {
@@ -59,7 +61,7 @@ public class UserService {
   }
 
   public UserDto updateUser(Long id, UpdateUserReq req) {
-    var user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(id);
     userMapper.updateUser(req, user);
     userRepository.save(user);
 
@@ -67,12 +69,12 @@ public class UserService {
   }
 
   public void deleteUser(Long userId) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     userRepository.delete(user);
   }
 
   public void changePassword(Long userId, ChangePasswordReq req) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     if (!passwordEncoder.matches(req.getOldPassword(), user.getPassword())) {
       throw new AccessDeniedException("Password does not match");
     }
@@ -81,7 +83,7 @@ public class UserService {
   }
 
   public AddressDto addAddress(Long userId, AddressDto addressDto) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     var address = addressMapper.toEntity(addressDto);
     address.setUser(user);
     user.getAddresses().add(address);
@@ -91,7 +93,7 @@ public class UserService {
   }
 
   public AddressDto updateAddress(Long userId, Long addressId, UpdateAddressReq req) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     var address = user.getAddresses().stream().filter((a -> a.getId().equals(addressId)))
             .findFirst()
             .orElseThrow(AddressNotFoundException::new);
@@ -101,7 +103,7 @@ public class UserService {
   }
 
   public void deleteAddress(Long userId, Long addressId) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     var address = addressRepository.findById(addressId).orElseThrow(AddressNotFoundException::new);
     if (!address.getUser().getId().equals(userId)) {
       throw new AddressNotForThisUser();
@@ -111,7 +113,7 @@ public class UserService {
   }
 
   public ProfileDto addProfile(Long userId, ProfileDto profileDto) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     var profile = profileMapper.toEntity(profileDto);
     profile.setUser(user);
 
@@ -120,7 +122,7 @@ public class UserService {
   }
 
   public ProfileDto updateProfile(Long userId, UpdateProfileReq req) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     var profile = user.getProfile();
     if (profile == null) {
       profile = Profile.builder()
@@ -142,7 +144,7 @@ public class UserService {
   }
 
   public void deleteProfile(Long userId) {
-    var user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    var user = findUserById(userId);
     var profile = user.getProfile();
     if (profile == null) {
       throw new ProfileNotFoundException();
@@ -150,5 +152,9 @@ public class UserService {
     user.setProfile(null);
     userRepository.save(user);
     profileRepository.delete(profile);
+  }
+
+  private User findUserById(Long userId) {
+    return userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
   }
 }

@@ -2,6 +2,7 @@ package com.paulinasprojects.coursesapi.services;
 
 import com.paulinasprojects.coursesapi.dtos.CategoryDto;
 import com.paulinasprojects.coursesapi.dtos.UpdateCategoryReq;
+import com.paulinasprojects.coursesapi.entities.Category;
 import com.paulinasprojects.coursesapi.exceptions.CategoryNotFoundException;
 import com.paulinasprojects.coursesapi.mappers.CategoryMapper;
 import com.paulinasprojects.coursesapi.repositories.CategoryRepository;
@@ -24,7 +25,7 @@ public class CategoryService {
   }
 
   public CategoryDto getCategory(Byte categoryId) {
-    var category = categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
+    var category = findCategoryById(categoryId);
     return categoryMapper.toDto(category);
   }
 
@@ -40,14 +41,18 @@ public class CategoryService {
   }
 
   public CategoryDto updateCategory(Byte categoryId, UpdateCategoryReq req) {
-    var category = categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
+    var category = findCategoryById(categoryId);
     categoryMapper.updateCategory(req, category);
     categoryRepository.save(category);
     return categoryMapper.toDto(category);
   }
 
   public void deleteCategory(Byte categoryId) {
-    var category = categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
+    var category = findCategoryById(categoryId);
     categoryRepository.delete(category);
+  }
+
+  private Category findCategoryById(Byte categoryId) {
+    return categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
   }
 }
